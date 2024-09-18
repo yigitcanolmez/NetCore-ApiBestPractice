@@ -1,4 +1,4 @@
-﻿namespace Repositories;
+﻿namespace Repositories.Products;
 
 public class Product
 {
