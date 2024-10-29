@@ -1,6 +1,7 @@
 ﻿using Repositories.Products;
 using System.Net;
 using System.Xml.Linq;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Products.Models.Request;
@@ -8,7 +9,7 @@ using Services.Products.Models.Response;
 
 namespace Services.Products;
 
-public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork) : IProductService
+public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork, IMapper mapper) : IProductService
 {
     public async Task<ServiceResult<List<ProductResponse>>> GetTopPriceProductsAsync(int count)
     {
@@ -24,7 +25,7 @@ public class ProductService(IProductRepository productRepository, IUnitOfWork un
     {
         var products = await productRepository.GetAll().ToListAsync();
 
-        var productAsDto = products.Select(x => new ProductResponse(x.Id, x.Name, x.Price, x.Stock)).ToList();
+        var productAsDto = mapper.Map<List<ProductResponse>>(products);
 
         return ServiceResult<List<ProductResponse>>.Success(productAsDto);
     }
