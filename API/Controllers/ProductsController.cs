@@ -12,11 +12,11 @@ public class ProductsController(IProductService productService) : CustomBaseCont
     public async Task<IActionResult> GetAll() =>
         CreateActionResult(await productService.GetAllAsync());
 
-    [HttpGet("{pageNumber}/{pageSize}")]
+    [HttpGet("{pageNumber:int}/{pageSize:int}")]
     public async Task<IActionResult> GetPagedAllList(int pageNumber, int pageSize) =>
         CreateActionResult(await productService.GetPagedAllListAsync(pageNumber, pageSize));
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById([FromRoute] int id) =>
         CreateActionResult(await productService.GetByIdAsync(id));
 
@@ -24,11 +24,11 @@ public class ProductsController(IProductService productService) : CustomBaseCont
     public async Task<IActionResult> Create([FromBody] CreateProductRequest request) =>
         CreateActionResult(await productService.CreateAsync(request));
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateProductRequest request) =>
         CreateActionResult(await productService.UpdateAsync(id, request));
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id) =>
         CreateActionResult(await productService.DeleteAsync(id));
 }
