@@ -1,12 +1,14 @@
 ﻿using Repositories.Products;
 using System.Net;
+using System.Xml.Linq;
+using Microsoft.EntityFrameworkCore;
 using Repositories;
 using Services.Products.Models.Request;
 using Services.Products.Models.Response;
 
 namespace Services.Products;
 
-public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork ) : IProductService
+public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork) : IProductService
 {
     public async Task<ServiceResult<List<ProductResponse>>> GetTopPriceProductsAsync(int count)
     {
@@ -14,23 +16,32 @@ public class ProductService(IProductRepository productRepository, IUnitOfWork un
 
         var productsAsDto = products.Select(x => new ProductResponse(x.Id, x.Name,
             x.Price, x.Stock)).ToList();
-        
-        return ServiceResult<List<ProductResponse >>.Success(productsAsDto);
+
+        return ServiceResult<List<ProductResponse>>.Success(productsAsDto);
     }
 
-    public async Task<ServiceResult<ProductResponse>> GetProductByIdAsync(int id)
+    public async Task<ServiceResult<List<ProductResponse>>> GetAllAsync()
+    {
+        var products = await productRepository.GetAll().ToListAsync();
+
+        var productAsDto = products.Select(x => new ProductResponse(x.Id, x.Name, x.Price, x.Stock)).ToList();
+
+        return ServiceResult<List<ProductResponse>>.Success(productAsDto);
+    }
+
+    public async Task<ServiceResult<ProductResponse?>> GetByIdAsync(int id)
     {
         var product = await productRepository.GetByIdAsync(id);
 
         if (product is null)
-            return ServiceResult<ProductResponse>.Fail("Product not found", HttpStatusCode.NotFound);
+            return ServiceResult<ProductResponse?>.Fail("Product not found", HttpStatusCode.NotFound);
 
         var productAsDto = new ProductResponse(product.Id, product.Name, product.Price, product.Stock);
-        
-        return ServiceResult<ProductResponse>.Success(productAsDto!);
+
+        return ServiceResult<ProductResponse?>.Success(productAsDto!);
     }
 
-    public async Task<ServiceResult<CreateProductResponse>> CreateProductAsync(CreateProductRequest request)
+    public async Task<ServiceResult<CreateProductResponse>> CreateAsync(CreateProductRequest request)
     {
         var product = new Product
         {
@@ -41,13 +52,12 @@ public class ProductService(IProductRepository productRepository, IUnitOfWork un
 
         await productRepository.AddAsync(product);
         await unitOfWork.SaveChangesAsync();
-        return ServiceResult<CreateProductResponse>.Success(new CreateProductResponse(product.Id)); 
-
+        return ServiceResult<CreateProductResponse>.Success(new CreateProductResponse(product.Id));
     }
 
-    public async Task<ServiceResult> UpdateProductAsync(UpdateProductRequest request)
+    public async Task<ServiceResult> UpdateAsync(int id, UpdateProductRequest request)
     {
-        var product = await productRepository.GetByIdAsync(request.Id);
+        var product = await productRepository.GetByIdAsync(id);
 
         if (product is null)
         {
@@ -56,16 +66,15 @@ public class ProductService(IProductRepository productRepository, IUnitOfWork un
 
         product.Name = request.Name;
         product.Price = request.Price;
-        product.Stock = request.Stock; 
-        
+        product.Stock = request.Stock;
+
         productRepository.Update(product);
         await unitOfWork.SaveChangesAsync();
 
-        return ServiceResult.Success();
-
+        return ServiceResult.Success(HttpStatusCode.NoContent);
     }
 
-    public async Task<ServiceResult> DeleteProductAsync(int id)
+    public async Task<ServiceResult> DeleteAsync(int id)
     {
         var product = await productRepository.GetByIdAsync(id);
 
@@ -76,8 +85,7 @@ public class ProductService(IProductRepository productRepository, IUnitOfWork un
 
         productRepository.Delete(product);
         await unitOfWork.SaveChangesAsync();
-        
-        return ServiceResult.Success();
-    }
 
+        return ServiceResult.Success(HttpStatusCode.NoContent);
+    }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Repositories.Products;
@@ -10,16 +11,16 @@ public static class RepositoryExtensions
     public static IServiceCollection AddRepositories(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<AppDbContext>(options =>
-       {
-           var connectionStringOption = configuration.GetSection(ConnectionStringOption.Key)
-                                                             .Get<ConnectionStringOption>();
+        {
+            var connectionStringOption = configuration.GetSection(ConnectionStringOption.Key)
+                .Get<ConnectionStringOption>();
 
-           options.UseSqlServer(connectionStringOption!.SqlServer,
-               sqlServerOptionsAction =>
-               {
-                   sqlServerOptionsAction.MigrationsAssembly(typeof(RepositoryAssembly).Assembly.FullName);
-               });
-       });
+            options.UseSqlServer(connectionStringOption!.SqlServer,
+                sqlServerOptionsAction =>
+                {
+                    sqlServerOptionsAction.MigrationsAssembly(typeof(RepositoryAssembly).Assembly.FullName);
+                });
+        });
 
 
         services.AddScoped<IProductRepository, ProductRepository>();
@@ -28,6 +29,15 @@ public static class RepositoryExtensions
 
 
         return services;
+    }
 
+    public static IApplicationBuilder MigrateDatabase(this IApplicationBuilder app)
+    {
+        using var scope = app.ApplicationServices.CreateScope();
+
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        context.Database.Migrate();
+        
+        return app;
     }
 }

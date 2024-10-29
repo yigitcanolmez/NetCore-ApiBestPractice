@@ -5,7 +5,7 @@
 namespace Repositories.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Initial1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
